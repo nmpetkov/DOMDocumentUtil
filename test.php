@@ -1,7 +1,10 @@
 <?php
 include __DIR__.'/DOMDocumentUtil.php';
 
-$html = '<img alt="" width="44" src="http://www.example.com/images/image1.jpg" style="float: right; width: 100px; height: 75px;" />
-Some text.';
+/*$html = '<img alt="" src="http://www.cmstory.com/images/cm-logo.jpg"
+ style="float: left; width: 150px;" />Some text.';*/
+$html = '<img alt="" src="http://www.cmstory.com/images/cm-logo.jpg"
+ style="float: left; width: 500px;" />Some text.';
 
-echo DOMDocumentUtil::imgStyleConvert($html);
+$arrSize = array('width' => 300, 'height' => 300, 'retainratio' => true, 'noenlargeorig' => true, 'noenlargesized' => true);
+echo DOMDocumentUtil::imgTagConvert($html, null, false, null, $arrSize);
