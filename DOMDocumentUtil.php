@@ -36,15 +36,17 @@ class DOMDocumentUtil
      * @param string $encoding (optional, default UTF-8)
      * @param boolean $removeStyle (optional)
      * @param string $baseurl (optional) - Base URL to put in src attribute (if relative path is given for the src)
-     * @param array $arrSize (optional) - Force size for the image, excepted array element:
+     * @param array $arrSize (optional) - Force size for the image, accepted array elements:
      *          width (integer)
      *          height (integer)
      *          retainratio (boolean)
      *          noenlargeorig (boolean) - flag not to set size bigger then size of original image
      *          noenlargesized (boolean) - flag not to set size bigger then olready set size
+     * @param array $arrStyle (optional) - Force style for the image, accepted array elements:
+     *          float (left, right or none)
      * @return string
      */
-    public static function imgTagConvert($html, $encoding = null, $removeStyle = false, $baseurl = null, $arrSize = null)
+    public static function imgTagConvert($html, $encoding = null, $removeStyle = false, $baseurl = null, $arrSize = null, $arrStyle = null)
     {
         if (empty($encoding)) {
             $encoding = 'UTF-8';
@@ -105,9 +107,25 @@ class DOMDocumentUtil
 
             // Style treatment
             $style = $img->getAttribute('style');
-            $arrStyle = explode(';', $style);
-            foreach (array_keys($arrStyle) as $k) {
-                $arrAttribute = explode(':', $arrStyle[$k]);
+            $arrStyleTag = explode(';', $style);
+            if (isset($arrStyle)) {
+                // force given float style
+                if (isset($arrStyle['float']) && $arrStyle['float']) {
+                    $styleforced = false;
+                    foreach (array_keys($arrStyleTag) as $k) {
+                        $arrAttribute = explode(':', $arrStyleTag[$k]);
+                        if (trim($arrAttribute[0]) == 'float') {
+                            $arrStyleTag[$k] = 'float: '.$arrStyle['float'];
+                            $styleforced = true;
+                        }
+                    }
+                    if (!$styleforced) {
+                        $arrStyleTag[] = 'float: '.$arrStyle['float'];
+                    }
+                }
+            }
+            foreach (array_keys($arrStyleTag) as $k) {
+                $arrAttribute = explode(':', $arrStyleTag[$k]);
                 if (trim($arrAttribute[0]) == 'float') {
                     if (!$img->getAttribute('align')) {
                         $img->setAttribute('align', trim($arrAttribute[1]));
@@ -116,25 +134,25 @@ class DOMDocumentUtil
                     $styleWidth = (int)$arrAttribute[1];
                     if ($setWidth && ($arrSize['noenlargesized'] && $styleWidth > $setWidth)) {
                         // set in style
-                        $arrStyle[$k] = 'width: '.$setWidth.'px';
+                        $arrStyleTag[$k] = 'width: '.$setWidth.'px';
                     } else {
                         // get from style to set as img attribute
                         $setWidth = $styleWidth;
                     }
                     if ($arrSize['retainratio'] && $imgHeight && $imgWidth) {
-                        $arrStyle[$k] = 'height: '.round($setWidth * $imgHeight / $imgWidth).'px';
+                        $arrStyleTag[$k] = 'height: '.round($setWidth * $imgHeight / $imgWidth).'px';
                     }
                 } elseif (trim($arrAttribute[0]) == 'height') {
                     $styleHeight = (int)$arrAttribute[1];
                     if ($setHeight && ($arrSize['noenlargesized'] && $styleHeight > $setHeight)) {
                         // set in style
-                        $arrStyle[$k] = 'height: '.$setHeight.'px';
+                        $arrStyleTag[$k] = 'height: '.$setHeight.'px';
                     } else {
                         // get from style to set as img attribute
                         $setHeight = $styleHeight;
                     }
                     if ($arrSize['retainratio'] && $imgHeight && $imgWidth) {
-                        $arrStyle[$k] = 'width: '.round($setHeight * $imgWidth / $imgHeight).'px';
+                        $arrStyleTag[$k] = 'width: '.round($setHeight * $imgWidth / $imgHeight).'px';
                     }
                 }
             }
@@ -149,11 +167,11 @@ class DOMDocumentUtil
                 $img->setAttribute('height', $setHeight);
             }
 
-            // Remove or set he style
+            // Remove or set the style
             if ($removeStyle) {
                 $img->removeAttribute('style');
             } else {
-                $style = implode(';', $arrStyle);
+                $style = implode(';', $arrStyleTag);
                 if ($style) {
                     $img->setAttribute('style', $style);
                 }
