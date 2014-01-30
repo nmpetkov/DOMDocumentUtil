@@ -41,9 +41,10 @@ class DOMDocumentUtil
      *          height (integer)
      *          retainratio (boolean)
      *          noenlargeorig (boolean) - flag not to set size bigger then size of original image
-     *          noenlargesized (boolean) - flag not to set size bigger then olready set size
-     * @param array $arrStyle (optional) - Force style for the image, accepted array elements:
+     *          noenlargesized (boolean) - flag not to set size bigger then already set size
+     * @param array $arrStyle (optional) - Force or set style for the image, accepted array elements:
      *          float (left, right or none)
+     *          float_force (0, 1) - if to force given style, in case it exists in the tag, default 0 (not to force))
      * @return string
      */
     public static function imgTagConvert($html, $encoding = null, $removeStyle = false, $baseurl = null, $arrSize = null, $arrStyle = null)
@@ -109,17 +110,19 @@ class DOMDocumentUtil
             $style = $img->getAttribute('style');
             $arrStyleTag = explode(';', $style);
             if (isset($arrStyle)) {
-                // force given float style
+                // force or set given float style
                 if (isset($arrStyle['float']) && $arrStyle['float']) {
-                    $styleforced = false;
+                    $stylefound = false;
                     foreach (array_keys($arrStyleTag) as $k) {
                         $arrAttribute = explode(':', $arrStyleTag[$k]);
                         if (trim($arrAttribute[0]) == 'float') {
-                            $arrStyleTag[$k] = 'float: '.$arrStyle['float'];
-                            $styleforced = true;
+                            if (isset($arrStyle['float_force']) && $arrStyle['float_force']) {
+                                $arrStyleTag[$k] = 'float: '.$arrStyle['float'];
+                            }
+                            $stylefound = true;
                         }
                     }
-                    if (!$styleforced) {
+                    if (!$stylefound) {
                         $arrStyleTag[] = 'float: '.$arrStyle['float'];
                     }
                 }
